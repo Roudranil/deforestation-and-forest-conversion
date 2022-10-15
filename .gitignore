@@ -1,0 +1,16 @@
+*.toc
+*.png
+*.aux
+*.fdb_latexmk
+*.fls
+*.txt
+*.out
+*.log
+*.gz
+*.RData
+*.Rhistory
+*.csv
+*.tex
+.Rproj.user
+*desktop.ini
+*.Rproj
