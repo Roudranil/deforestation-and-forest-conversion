@@ -6,6 +6,12 @@
 *.txt
 *.out
 *.log
+*.bcf
+*.bib
+*.blg
+*.bbl
+*.xml
+*.html
 *.gz
 *.RData
 *.Rhistory

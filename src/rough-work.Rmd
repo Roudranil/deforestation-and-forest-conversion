@@ -1,0 +1,69 @@
+---
+title: "Rough work for project"
+author: "Roudranil Das"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(tidytext)
+library(scales)
+```
+ 
+We will be using the following dataset from TidyTuesday with R: deforestation.
+[Link](https://github.com/rfordatascience/tidytuesday/tree/master/data/2021/2021-04-06)
+
+Loading in the datasets:
+```{r}
+forest <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-04-06/forest.csv')
+forest_area <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-04-06/forest_area.csv')
+# brazil_loss <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-04-06/brazil_loss.csv')
+# soybean_use <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-04-06/soybean_use.csv')
+# vegetable_oil <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-04-06/vegetable_oil.csv')
+```
+
+Our analysis consists of the following 5 datasets:
+
+The forest dataset shows the change every 5 years in forest conservation in hectares by country. To deal with the data better, we convert the hectares to $km^2$. And we also select those entities with a valid country code.
+```{r}
+forest %>% 
+    view()
+
+forest <- forest %>% 
+    mutate(net_forest_conversion = net_forest_conversion / 100) %>% 
+    filter(str_length(code) == 3) %>% 
+    rename(country = entity)
+```
+
+1. maximum forest conversion by country (absolute values)
+```{r}
+forest %>%
+  group_by(year) %>%
+  slice_max(abs(net_forest_conversion), n = 10) %>%
+  ungroup() %>%
+  mutate(country = reorder_within(country, net_forest_conversion, year)) %>%
+  ggplot(aes(net_forest_conversion, country,
+             fill = net_forest_conversion > 0)) +
+  geom_col() +
+  facet_wrap(~ year, scales = "free_y") +
+  scale_x_continuous(label = comma) +
+  scale_y_reordered() +
+  theme(legend.position = "none") +
+  labs(x = "Net change in forest over the years (in sq km)",
+       y = "")
+
+forest %>% 
+    group_by(year) %>%
+    slice_max(abs(net_forest_conversion), n = 4) %>%
+    ungroup() %>%
+    mutate(country = reorder_within(country, net_forest_conversion, year)) %>%
+    ggplot(aes(country, net_forest_conversion, fill = net_forest_conversion > 0)) +
+    geom_bar(stat = "identity") + 
+    facet_wrap(~year)
+    scale_y_reordered() +
+    theme(legend.position = "none")
+    
+forest
+```
+
