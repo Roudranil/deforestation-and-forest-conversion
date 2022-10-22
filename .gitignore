@@ -6,8 +6,8 @@
 *.txt
 *.out
 *.log
-*.bcf
 *.bib
+*.bcf
 *.blg
 *.bbl
 *.xml
