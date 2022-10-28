@@ -15,7 +15,6 @@
 *.gz
 *.RData
 *.Rhistory
-*.csv
 *.tex
 .Rproj.user
 *desktop.ini
