@@ -2,13 +2,18 @@
 title: "Rough work for project"
 author: "Roudranil Das"
 date: "`r Sys.Date()`"
-output: html_document
+output:
+  html_document: default
+  pdf_document: default
 ---
 
 ```{r}
 library(tidyverse)
 library(tidytext)
 library(scales)
+library(fuzzyjoin)
+library(maps)
+library(countrycode)
 ```
  
 We will be using the following dataset from TidyTuesday with R: deforestation.
@@ -18,7 +23,7 @@ Loading in the datasets:
 ```{r}
 forest <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-04-06/forest.csv')
 forest_area <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-04-06/forest_area.csv')
-# brazil_loss <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-04-06/brazil_loss.csv')
+brazil_loss <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-04-06/brazil_loss.csv')
 # soybean_use <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-04-06/soybean_use.csv')
 # vegetable_oil <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-04-06/vegetable_oil.csv')
 ```
@@ -27,9 +32,6 @@ Our analysis consists of the following 5 datasets:
 
 The forest dataset shows the change every 5 years in forest conservation in hectares by country. To deal with the data better, we convert the hectares to $km^2$. And we also select those entities with a valid country code.
 ```{r}
-forest %>% 
-    view()
-
 forest <- forest %>% 
     mutate(net_forest_conversion = net_forest_conversion / 100) %>% 
     filter(str_length(code) == 3) %>% 
@@ -39,31 +41,220 @@ forest <- forest %>%
 1. maximum forest conversion by country (absolute values)
 ```{r}
 forest %>%
-  group_by(year) %>%
-  slice_max(abs(net_forest_conversion), n = 10) %>%
-  ungroup() %>%
-  mutate(country = reorder_within(country, net_forest_conversion, year)) %>%
-  ggplot(aes(net_forest_conversion, country,
-             fill = net_forest_conversion > 0)) +
-  geom_col() +
-  facet_wrap(~ year, scales = "free_y") +
-  scale_x_continuous(label = comma) +
-  scale_y_reordered() +
-  theme(legend.position = "none") +
-  labs(x = "Net change in forest over the years (in sq km)",
-       y = "")
-
-forest %>% 
     group_by(year) %>%
-    slice_max(abs(net_forest_conversion), n = 4) %>%
+    slice_max(abs(net_forest_conversion), n = 10) %>%
     ungroup() %>%
     mutate(country = reorder_within(country, net_forest_conversion, year)) %>%
-    ggplot(aes(country, net_forest_conversion, fill = net_forest_conversion > 0)) +
-    geom_bar(stat = "identity") + 
-    facet_wrap(~year)
+    ggplot(aes(net_forest_conversion, country,
+               fill = net_forest_conversion > 0)) +
+    geom_col() +
+    facet_wrap(~ year, scales = "free_y") +
+    scale_x_continuous(label = comma) +
     scale_y_reordered() +
-    theme(legend.position = "none")
-    
-forest
+    theme(legend.position = "none") +
+    labs(title = "Where have we seen the greatest change in net forest area in the years?",
+         x = "Net change in forest area over the years (in sq km)",
+         y = "")
+
+ggsave(filename = "net_change_in_forest_area_1.png",
+       device = "png",
+       dpi = 300,
+       path = "doc/figures/")
 ```
+
+2. maximum forest increase
+```{r}
+forest %>% 
+    group_by(year) %>% 
+    slice_max(net_forest_conversion, n = 5) %>% 
+    ungroup() %>% 
+    mutate(country = reorder_within(country, net_forest_conversion, year)) %>% 
+    ggplot(aes(net_forest_conversion, country, fill = country)) + 
+    geom_col() +
+    facet_wrap(~year, scales = "free_y") +
+    scale_x_continuous(label = comma) +
+    scale_y_reordered() +
+    theme(legend.position = "none") + 
+    labs(title = "Where did we see the most increase in forest every year?",
+         x = "Net increase in forest area over the years (in sq km)",
+         y = "")
+
+ggsave(filename = "net_increase_in_forest_area_2.png",
+       device = "png",
+       dpi = 300,
+       path = "doc/figures/")
+```
+
+3. maximum deforestation
+```{r}
+forest %>% 
+    group_by(year) %>% 
+    slice_min(net_forest_conversion, n = 5) %>% 
+    ungroup() %>% 
+    mutate(country = reorder_within(country, -net_forest_conversion, year)) %>% 
+    ggplot(aes(net_forest_conversion, country, fill = country)) + 
+    geom_col() +
+    facet_wrap(~year, scales = "free_y") +
+    scale_x_continuous(label = comma) +
+    scale_y_reordered() +
+    theme(legend.position = "none") + 
+    labs(title = "Where did we see the most deforestation every year?",
+         x = "Net increase in forest area over the years (in sq km)",
+         y = "")
+ggsave(filename = "most_deforestation_3.png",
+       device = "png",
+       dpi = 300,
+       path = "doc/figures/")
+```
+
+
+4. maximum forest conversion by year
+```{r}
+forest %>% 
+    group_by(year) %>% 
+    summarise(total_forest_conversion = sum(net_forest_conversion)) %>% 
+    ggplot(aes(x = as.factor(year), weight = total_forest_conversion)) +
+    geom_bar(aes(fill = as.factor(year))) + 
+    theme(legend.position = "none") +
+    labs(title = "Total forest area conversion by year",
+         x = "Years",
+         y = "Net forest area converted (in sq km)")
+```
+
+5. 10 countries with max change in forest area
+```{r}
+forest_area <- forest_area %>% 
+    filter(!year %in% c(1990, 1991, 1992)) %>% 
+    filter(str_length(code) == 3) %>% 
+    rename(country = entity)
+
+forest_area %>% 
+    filter(year %in% c(min(year), max(year))) %>% 
+    pivot_wider(names_from = year, values_from = forest_area, names_prefix = "year_") %>% 
+    mutate(change_in_forest_area = year_2020 - year_1993) %>% 
+    select(country, code, change_in_forest_area) %>% 
+    filter(!is.na(change_in_forest_area)) %>% 
+    arrange(desc(abs(change_in_forest_area))) %>% 
+    head(10) %>% 
+    mutate(country = fct_reorder(country, -change_in_forest_area)) %>% 
+    mutate(change_in_forest_area = change_in_forest_area/100) %>% 
+    ggplot(aes(x = as.factor(country), weight = change_in_forest_area)) +
+    geom_bar(aes(fill = change_in_forest_area > 0)) +
+    theme(legend.position = "none",
+          axis.text.x = element_text(angle = 45, vjust = 0.5)) +
+    scale_y_continuous(labels = percent) +
+    labs(title = "Top 10 countries with maximum change in forest area between 1993 and 2020",
+         x = "Countries",
+         y = "Change in forest area (in %)")
+
+ggsave(filename = "doc/figures/max_change_forest_area_5.png",
+      device = "png",
+      dpi = 300)
+```
+
+```{r}
+#countries_with_highest_average_area <- 
+    
+forest_area %>% 
+    mutate(forest_area = forest_area/100) %>% 
+    group_by(code) %>% 
+    summarise(avg_forest_area = mean(forest_area)) %>% 
+    arrange(desc(avg_forest_area)) %>% 
+    head(15)
+    
+# forest_area %>% 
+#     filter(code %in% c("RUS", "BRA", "CAN", "USA", "AUS", "IND", "PER", "MEX", "IDN")) %>% 
+#     mutate(country = fct_reorder(country, -forest_area),
+#            forest_area = forest_area/100) %>% 
+#     ggplot(aes(x = year, y = forest_area, color = country)) +
+#     geom_line(size=1) +
+#     scale_y_continuous(labels = percent)
+
+forest_area %>% 
+    mutate(forest_area = forest_area/100) %>% 
+    mutate(country = fct_lump(country, 9, w = forest_area)) %>% 
+    group_by(country, year) %>% 
+    summarise(forest_area = sum(forest_area), .groups = "drop") %>% 
+    mutate(country = fct_reorder(country, -forest_area)) %>% 
+    ggplot(aes(year, forest_area, fill = country)) +
+    geom_area() + 
+    scale_y_continuous(labels = percent) +
+    expand_limits(y = 0) +
+    labs(x = "Year",
+         y = "Percentage of global forest area",
+         fill = "Countries")
+
+ggsave(filename = "pct_global_forest_area_6.png",
+       device = "png",
+       dpi = 300,
+       path = "doc/figures/")
+```
+
+```{r}
+brazil_loss <- brazil_loss %>%
+    select(-entity, -code)
+
+```
+
+We see that max land lost is all due to pasture.
+```{r}
+brazil_loss %>%
+    pivot_longer(cols = commercial_crops:small_scale_clearing, names_to = "cause", values_to = "lost_forest_area") %>% 
+    group_by(year) %>% 
+    slice_max(order_by = lost_forest_area) %>% 
+    ungroup()
+
+brazil_loss %>%
+    pivot_longer(cols = commercial_crops:small_scale_clearing, names_to = "cause", values_to = "lost_forest_area") %>% 
+    mutate(lost_forest_area = lost_forest_area/100) %>% 
+    filter(!cause == "pasture") %>% 
+    group_by(year) %>% 
+    slice_max(order_by = lost_forest_area) %>% 
+    ungroup() %>% 
+    ggplot(aes(year, lost_forest_area, fill = cause)) +
+    geom_bar(width = 1, stat = "identity", color = "white") +
+    scale_y_continuous(aes(breaks = 0:nlevels(year), labels = cause)) +
+    guides(color = "none") +
+    labs(title = "Causes which result in the highest loss of forest in Brazil by year apart from pastures",
+         fill = "Cause of loss",
+         x = "Year",
+         y = "Forest area lost (in sq km)") +
+    scale_y_continuous(labels = comma)
+
+ggsave(filename = "scnd_highest_loss_of_forest_cover_7.png",
+       device = "png",
+       dpi = 300,
+       path = "doc/figures/")
+```
+
+line graph
+```{r}
+brazil_loss %>%
+    pivot_longer(cols = commercial_crops:small_scale_clearing, names_to = "cause", values_to = "lost_forest_area") %>% 
+    filter(!cause == "pasture") %>% 
+    mutate(lost_forest_area = lost_forest_area/100) %>% 
+    ggplot(aes(year, lost_forest_area, color = cause)) +
+    geom_line() 
+    
+```
+
+Forset conversion map
+```{r}
+maps::iso3166
+
+country_data <- forest %>% 
+    filter(year == 2015) %>% 
+    inner_join(maps::iso3166, by = c(code = "a3"))
+
+map_data("world") %>% 
+    as_tibble() %>% 
+    filter(region != "Antarctica") %>% 
+    regex_left_join(country_data, by = c(region = "mapname")) %>% 
+    ggplot(aes(long, lat, group = group , fill = net_forest_conversion)) +
+    geom_polygon() +
+    scale_fill_gradient2(low = "red", high = "green") +
+    theme_map()
+```
+
+
 
