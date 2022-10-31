@@ -21,6 +21,7 @@
 *.Rproj
 
 sayantan.csv
+sayantan.Rmd
 src/rough-work_files
 
 !src/visualisation-project-code.html
