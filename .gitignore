@@ -25,3 +25,7 @@ sayantan.Rmd
 src/rough-work_files
 
 !src/visualisation-project-code.html
+
+shiny-app/brazil_loss.csv
+shiny-app/forest.csv
+shiny-app/forest_area.csv
