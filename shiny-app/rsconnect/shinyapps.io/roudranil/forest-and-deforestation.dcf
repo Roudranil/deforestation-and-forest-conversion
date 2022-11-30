@@ -1,0 +1,14 @@
+name: forest-and-deforestation
+title: forest-and-deforestation
+username:
+account: roudranil
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 7773557
+bundleId: 6573367
+url: https://roudranil.shinyapps.io/forest-and-deforestation/
+when: 1669828294.20355
+lastSyncTime: 1669828294.20355
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: desktop.ini
