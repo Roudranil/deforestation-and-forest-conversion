@@ -26,6 +26,6 @@ src/rough-work_files
 
 !src/visualisation-project-code.html
 
-shiny-app/brazil_loss.csv
-shiny-app/forest.csv
-shiny-app/forest_area.csv
+shiny-app/data/brazil_loss.csv
+shiny-app/data/forest.csv
+shiny-app/data/forest_area.csv
