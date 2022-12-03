@@ -114,6 +114,10 @@ sidebar <- dashboardSidebar(
     sidebarMenu(
         sidebarHeader("Brazil's Loss of Forest Cover"),
         menuItem("Biggest cause of loss", tabName = "brazil_cause", icon = icon("chart-simple"))
+    ),
+    br(),
+    sidebarMenu(
+        menuItem("Contact", tabName = "contact", icon = icon("envelope"))
     )
 )
 
@@ -143,7 +147,7 @@ body <- dashboardBody(
             tags$ul(
                 tags$li(tags$b("Forest conversion area over the years"), ": ", tags$code("net_forest_conversion")),
                 tags$li(tags$b("Forest area by country"), ": ", tags$code("forest_area")),
-                tags$li(tags$b("Factors behind Brazil's loss of forest cover"), ": ", tags$code("commercial_crops, flooding_due_to_dams, natural_disasters, pasture, selective_logging, fire, mining, other_infrastructure, roads, tree_plantations_including_palm, small_scale_clearing"))
+                tags$li(tags$b("Factors behind Brazil's loss of forest cover"), ": ", tags$code("commercial_crops, flooding_due_to_dams, natural_disturbances, pasture, selective_logging, fire, mining, other_infrastructure, roads, tree_plantations_including_palm, small_scale_clearing"))
             ),
             p("There are some other variables which are common to all the datasets, such as - ",
               code("country"), ", ",
@@ -241,7 +245,7 @@ body <- dashboardBody(
                                        "Choose the causes you want to visualise",
                                        choices = c("Commercial crops" = "commercial_crops",
                                                    "Flooding due to dams" = "flooding_due_to_dams",
-                                                   "Naturak disturbances" = "natural_disturbances",
+                                                   "Natural disturbances" = "natural_disturbances",
                                                    "Selective logging" = "selective_logging",
                                                    "Forest fire" = "fire",
                                                    "Mining" = "mining",
@@ -266,17 +270,26 @@ body <- dashboardBody(
                                height = "750px")
                 )
             )
+        ),
+        tabItem(
+            tabName = "contact",
+            h1("Contact details"),
+            p(tags$b("Name"), ": Roudranil Das"),
+            p(tags$b("Email id"), ": ", tags$a(tags$span(HTML("<u>roudranil@cmi.ac.in</u>"), style = "color:#52C5FF"), href = "mailto:roudranil@cmi.ac.in"))
         )
     )
 )
 
 footer <- dashboardFooter(
     left = a(
-        href = "https://github.com/Roudranil",
+        href = "https://github.com/Roudranil/deforestation-and-forest-conversionl",
         target = "_blank", 
-        icon("github")
+        tags$span(icon("github"), style = "color:#52C5FF")
     ),
-    right = "Roudranil Das"
+    right = a(
+        href = "https://roudranil.github.io",
+        tags$span("Roudranil Das", style = "color:#52C5FF")
+    )
 )
 
 # controlbar <- dashboardControlbar(
