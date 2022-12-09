@@ -140,7 +140,7 @@ body <- dashboardBody(
             tags$ul(
                 tags$li(tags$b("Forest conversion area over the years"), ": how much net forest area of each country has been converted to land for other uses in the years 1990, 2000, 2010, 2015."),
                 tags$li(tags$b("Forest area by country"), ": how much of the global forest area (in percentage) is present in each country in years from 1993 to 2020."),
-                tags$li(tags$b("Factors behind loss of Brazil's forest cover by year"), ": how much forest land (in hectares) has been lost by Brazil in 2013 to various reasons.")
+                tags$li(tags$b("Factors behind loss of Brazil's forest cover by year"), ": how much forest land (in hectares) has been lost by Brazil from 2001 to 2013 due to various reasons.")
             ),
             br(),
             h2("Main variables that we will be looking at from each of the datasets"),
@@ -237,7 +237,7 @@ body <- dashboardBody(
         tabItem(
             tabName = "brazil_cause",
             h1("Factors behind loss of Brazil's forest cover"),
-            p("Basic analysis will show that the major driving factor behind Brazil's loss of forest cover every year from 2001 to 2013. We look at the other factors causing the loss in forest cover."),
+            p("Basic analysis will show that the major driving factor behind Brazil's loss of forest cover every year from 2001 to 2013 is pasture. We look at the other factors causing the loss in forest cover."),
             fluidRow(
                 column(
                     4,
